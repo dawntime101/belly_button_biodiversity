@@ -6,7 +6,7 @@ import numpy as np
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -18,7 +18,7 @@ app = Flask(__name__)
 # Database Setup
 #################################################
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db/bellybutton.sqlite"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///DataSets/bellybutton.sqlite"
 db = SQLAlchemy(app)
 
 # reflect an existing database into a new model
@@ -42,8 +42,8 @@ def names():
     """Return a list of sample names."""
 
     # Use Pandas to perform the sql query
-    stmt = db.session.query(Samples).statement
-    df = pd.read_sql_query(stmt, db.session.bind)
+    stmt = session.query(Samples).statement
+    df = pd.read_sql_query(stmt, session.bind)
 
     # Return a list of the column names (sample names)
     return jsonify(list(df.columns)[2:])
@@ -62,7 +62,7 @@ def sample_metadata(sample):
         Samples_Metadata.WFREQ,
     ]
 
-    results = db.session.query(*sel).filter(Samples_Metadata.sample == sample).all()
+    results = session.query(*sel).filter(Samples_Metadata.sample == sample).all()
 
     # Create a dictionary entry for each row of metadata information
     sample_metadata = {}
@@ -82,8 +82,8 @@ def sample_metadata(sample):
 @app.route("/samples/<sample>")
 def samples(sample):
     """Return `otu_ids`, `otu_labels`,and `sample_values`."""
-    stmt = db.session.query(Samples).statement
-    df = pd.read_sql_query(stmt, db.session.bind)
+    stmt = session.query(Samples).statement
+    df = pd.read_sql_query(stmt, session.bind)
 
     # Filter the data based on the sample number and
     # only keep rows with values above 1
